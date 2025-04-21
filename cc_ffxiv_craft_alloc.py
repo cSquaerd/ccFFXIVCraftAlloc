@@ -33,6 +33,7 @@ class Ingredient(enum.StrEnum):
 	The main 5 materials should be self-evident as to which
 	particular item they represent per expansion.
 	"""
+
 	LUMBER = 'W',
 	LEATHER = 'L'
 	GEM = 'G',
@@ -52,12 +53,14 @@ class CollectableRecipe:
 
 	Can be for the latest expansion scrip currency or an older one.
 	"""
+
 	def __init__(
 		self, name : str = "", ingredients : list[tuple[Ingredient, int]] = [], crystals : list[tuple[Crystal, int]] = []
 	):
 		"""
 		Primary constructor, takes explicit lists of Ingredient-count and Crystal-count pairs, as well as a name.
 		"""
+
 		self.name = name
 		self.ingredients = dict()
 		for i, count in ingredients:
@@ -85,6 +88,7 @@ class CollectableRecipe:
 		Quick constructor. signature follows the format output by to_signature(),
 		see its documentation for details.
 		"""
+
 		try:
 			name, ingredients_untokenized, crystals_untokenized = signature.split(';')
 			
@@ -130,6 +134,7 @@ class CollectableRecipe:
 		Note that as long as ingredients remain in the middle and crystals on the right,
 		relative to the semicolons, their order between the commas does not matter.
 		"""
+
 		return "{:s};{:s};{:s}".format(
 			self.name,
 			','.join(k.value + str(self.ingredients[k]) for k in sorted(self.ingredients.keys())),
@@ -146,13 +151,26 @@ class CollectableRecipe:
 		)
 
 class RecipeCollection:
+	"""
+	Structure for comparing two or more recipes, and estimating optimal allocations
+	given budget restrictions via Monte Carlo methods.
+	"""
 	def __init__(self, recipes : list[CollectableRecipe]):
+		"""
+		Primary Constructor. It is recommended to build up from signature strings.
+		"""
+
 		self.recipes = recipes
 
 	def __str__(self) -> str:
 		return str(list(map(lambda r : r.name, self.recipes)))
 
 	def summarize(self, counts : list[int]) -> dict[str, dict[str, int]]:
+		"""
+		Given a count of how much of each recipe will be produced,
+		return a dictionary with the totals of each ingredient and crystal.
+		"""
+
 		summary = dict()
 		if len(counts) != len(self.recipes):
 			print("Error: size mismatch of counts parameter ({:d} vs. {:d})".format(len(counts), len(self.recipes)))
@@ -185,9 +203,21 @@ class RecipeCollection:
 		self, budget_ingredients : dict[Ingredient, int], budget_crystals : dict[Crystal, int],
 		max_rounds : int = 1_000, failures_until_stop : int = 50, debug_print : bool = False
 	) -> list[int]:
+		"""
+		Primary stage Monte Carlo method.
+
+		Given a budget of each ingredient and crystal, create a zero-vector of recipe production counts.
+		Randomly increment each recipe's count, backtracking if it goes over-budget.
+		Stop when either max_rounds iterations have occurred or if failures_until_stop backtracks in a row occurred.
+		"""
+
 		def valid_bill(
 			summary : dict[str, dict[str, int]], budget_i : dict[Ingredient, int], budget_c : dict[Crystal, int]
 		) -> bool:
+			"""
+			Helper function that checks if the current count vector would go over-budget.
+			"""
+
 			for i in Ingredient:
 				if summary["ingredients"][i] > budget_i[i]:
 					if debug_print:
@@ -232,6 +262,14 @@ class RecipeCollection:
 		max_rounds : int = 1_000, failures_until_stop : int = 50, max_approximations : int = 100,
 		debug_print : bool = False, debug_print_inner : bool = False
 	) -> tuple[int, list[list[int]]]:
+		"""
+		Secondary stage Monte Carlo method.
+
+		Run the primary stage many times, logging which returned vectors yield the highest production count.
+		On ties, collect alternate vectors. On a new maximum, drop all old vectors.
+		After all primary stage runs are complete, return the production count and count vector.
+		"""
+
 		max_items = 0
 		max_vectors = []
 
