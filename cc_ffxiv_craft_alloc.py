@@ -342,7 +342,7 @@ def main():
 	)
 
 	print(
-		"{:d} collectables can be produced with the following allocation: \n\t{:s}".format(
+		"\n{:d} collectables can be produced with the following allocation:\n\t{:s}".format(
 			production_count,
 			"\n\t".join(
 				[
@@ -354,7 +354,17 @@ def main():
 	)
 
 	if len(best_vectors) > 1:
-		print("Other count vectors are: \n\t{:s}".format("\n\t".join([str(v) for v in best_vectors])))
+		print("Other count vectors are:\n\t{:s}".format("\n\t".join([str(v) for v in best_vectors[1:]])))
+
+	summary = R.summarize(best_vectors[0])
+	print(
+		"Total material use (from primary vector) is as follows:\n\t{:s}".format(
+			"\n\t".join(
+				["{: >10s}: {: ^3d}".format(k.name, summary["ingredients"][k]) for k in Ingredient] + \
+				["{: >20s}: {: ^4d}".format(k.colorized_name(), summary["crystals"][k]) for k in Crystal]
+			)
+		)
+	)
 
 if __name__ == "__main__":
 	main()
