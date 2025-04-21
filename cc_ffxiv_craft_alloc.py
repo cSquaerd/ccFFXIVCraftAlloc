@@ -310,7 +310,51 @@ def main():
 		print("Bad filename: <{}>".format(fnfe))
 		exit(1)
 
-	print(manifest)
+	recipes = None
+	if "signatures" in manifest["recipes"].keys():
+		recipes = list(map(lambda sig : CollectableRecipe().from_string(sig), manifest["recipes"]["signatures"]))
+
+	if recipes is None:
+		print("Could not construct recipes.")
+		exit(1)
+
+	budget_ingredients = None
+	budget_crystals = None
+
+	if "ingredients" in manifest["budget"].keys():
+		budget_ingredients = {
+			Ingredient(k): manifest["budget"]["ingredients"][k] for k in manifest["budget"]["ingredients"].keys()
+		}
+
+	if "crystals" in manifest["budget"].keys():
+		budget_crystals = {
+			Crystal(k): manifest["budget"]["crystals"][k] for k in manifest["budget"]["crystals"].keys()
+		}
+
+	if budget_ingredients is None or budget_crystals is None:
+		print("Could not retrieve budgets.")
+		exit(1)
+
+	R = RecipeCollection(recipes)
+
+	production_count, best_vectors = R.meta_approximate(
+		budget_ingredients, budget_crystals, debug_print = True, debug_print_inner = False
+	)
+
+	print(
+		"{:d} collectables can be produced with the following allocation: \n\t{:s}".format(
+			production_count,
+			"\n\t".join(
+				[
+					"({: >4d}) {: >24s}".format(best_vectors[0][i], R.recipes[i].name)
+					for i in range(len(R.recipes))
+				]
+			)
+		)
+	)
+
+	if len(best_vectors) > 1:
+		print("Other count vectors are: \n\t{:s}".format("\n\t".join([str(v) for v in best_vectors])))
 
 if __name__ == "__main__":
 	main()
