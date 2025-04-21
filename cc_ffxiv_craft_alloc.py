@@ -1,6 +1,11 @@
 import enum, json, random
 
 class Crystal(enum.StrEnum):
+	"""
+	Representation of the elemental crystals needed as fuel for crafting.
+	The optional colorized_name() method can be used for colored output.
+	"""
+
 	FIRE = 'F'
 	ICE = 'I'
 	WIND = 'W'
@@ -17,6 +22,17 @@ class Crystal(enum.StrEnum):
 		return "\x1B[{:s}m{:s}\x1B[0m".format(color_codes[self.value], self.name.capitalize())
 
 class Ingredient(enum.StrEnum):
+	"""
+	Representation of the generic ingredient types.
+
+	In general, STONE means whichever whetstone is high level,
+	ALCHEMIC means whichever ink (for SCH/SMN/PCT) is high level,
+	and FOOD means whichever mob dropped food is high level;
+	This should hold for everything Stormblood and up, more or less.
+
+	The main 5 materials should be self-evident as to which
+	particular item they represent per expansion.
+	"""
 	LUMBER = 'W',
 	LEATHER = 'L'
 	GEM = 'G',
@@ -31,9 +47,17 @@ class Ingredient(enum.StrEnum):
 		return sorting_dict[self] < sorting_dict[other]
 
 class CollectableRecipe:
+	"""
+	Structure for describing a crafting recipe for a collectable item.
+
+	Can be for the latest expansion scrip currency or an older one.
+	"""
 	def __init__(
-		self, name : str = "", ingredients : list[[Ingredient, int]] = [], crystals : list[[Crystal, int]] = []
+		self, name : str = "", ingredients : list[tuple[Ingredient, int]] = [], crystals : list[tuple[Crystal, int]] = []
 	):
+		"""
+		Primary constructor, takes explicit lists of Ingredient-count and Crystal-count pairs, as well as a name.
+		"""
 		self.name = name
 		self.ingredients = dict()
 		for i, count in ingredients:
@@ -57,6 +81,10 @@ class CollectableRecipe:
 		return str(self)		
 
 	def from_string(self, signature : str) -> "CollectableRecipe":
+		"""
+		Quick constructor. signature follows the format output by to_signature(),
+		see its documentation for details.
+		"""
 		try:
 			name, ingredients_untokenized, crystals_untokenized = signature.split(';')
 			
@@ -85,6 +113,23 @@ class CollectableRecipe:
 		return self
 	
 	def to_signature(self) -> str:
+		"""
+		Create a signature string that describes the recipe as succinctly as possible.
+
+		There are three main fields that are semicolon separated:
+		* The name of the recipe
+		* The ingredients, which are comma-separated letter-number pairs, where:
+		  * The letter corresponds to the Ingredient enum value letter
+		  * The number is the count of how much of the Ingredient is needed for the recipe
+		* The crystals, which are too comma-separated letter-number pairs,
+		  like the ingredients are detailed above
+
+		Ex. "fishing rod;W2,G1,I1;W8,I8" represents the level 100 recipe for the
+		Rarefied Claro Walnut Fishing Rod
+
+		Note that as long as ingredients remain in the middle and crystals on the right,
+		relative to the semicolons, their order between the commas does not matter.
+		"""
 		return "{:s};{:s};{:s}".format(
 			self.name,
 			','.join(k.value + str(self.ingredients[k]) for k in sorted(self.ingredients.keys())),
@@ -92,6 +137,9 @@ class CollectableRecipe:
 		)
 
 	def overlap(self, other) -> tuple[list[Ingredient], list[Crystal]]:
+		"""
+		Determine which Ingredients and Crystals overlap between two recipes.
+		"""
 		return (
 			[i for i in Ingredient if i in self.ingredients and i in other.ingredients],
 			[c for c in Crystal if c in self.crystals and c in other.crystals]
