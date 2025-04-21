@@ -1,4 +1,5 @@
-import enum, json, random
+#!/bin/python3
+import argparse, enum, json, random
 
 class Crystal(enum.StrEnum):
 	"""
@@ -75,7 +76,7 @@ class CollectableRecipe:
 			[
 				"  Ingr: {: >10s} ({: ^3d})".format(k.name.capitalize(), self.ingredients[k])
 				for k in sorted(sorted(self.ingredients.keys()), key = lambda i : self.ingredients[i], reverse = True)
-			] + [
+			] + [ # We use 20 instead of 10 to account for the char overhead from colorized_name's ANSI escape chars
 				"  Crys: {: >20s} ({: ^3d})".format(k.colorized_name(), self.crystals[k])
 				for k in sorted(sorted(self.crystals.keys()), key = lambda c : self.crystals[c], reverse = True)
 			]
@@ -184,9 +185,9 @@ class RecipeCollection:
 			
 			for n in range(len(self.recipes)):
 				r = self.recipes[n]
-				c = counts[n]
+				k = counts[n]
 				if i in r.ingredients:
-					summary["ingredients"][i] += c * r.ingredients[i]
+					summary["ingredients"][i] += k * r.ingredients[i]
 
 		for c in Crystal:
 			summary["crystals"][c] = 0
@@ -291,4 +292,26 @@ class RecipeCollection:
 		if debug_print:
 			print("Maximum count was {:d} with {:d} maximal vectors.".format(max_items, len(max_vectors)))
 		return (max_items, max_vectors)
+
+def main():
+	parser = argparse.ArgumentParser(
+		description = "Crafting Recipe Allocator and Budget Checker for Final Fantasy XIV, specifically for Collectables",
+		formatter_class = argparse.RawTextHelpFormatter
+	)
+
+	parser.add_argument("manifest", help = "Path to JSON detailing recipes and budget")
+
+	argv = parser.parse_args()
+
+	try:
+		with open(argv.manifest, 'r') as f:
+			manifest = json.load(f)
+	except FileNotFoundError as fnfe:
+		print("Bad filename: <{}>".format(fnfe))
+		exit(1)
+
+	print(manifest)
+
+if __name__ == "__main__":
+	main()
 

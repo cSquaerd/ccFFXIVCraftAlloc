@@ -1,0 +1,32 @@
+{
+	"recipes": {
+		"signatures": [
+			"fishing rod;W2,I1,G1;W8,I8",
+			"round knife;I2,W1,G1;F8,E8",
+			"ring;I2,C1,G1;I8,E8",
+			"earrings;G2,I1,S1;W8,F8",
+			"culottes;C2,L1,G1;L8,W8",
+			"flat brush;W2,A1,C1;A8,L8",
+			"tacos;F2;F8,A8"
+		]
+	},
+	"budget": {
+		"ingredients": {
+			"W": 200,
+			"L": 50,
+			"G": 300,
+			"I": 400,
+			"S": 100,
+			"A": 50,
+			"F": 320
+		},
+		"crystals": {
+			"F": 3400,
+			"I": 3800,
+			"W": 5600,
+			"E": 5200,
+			"L": 3900,
+			"A": 3600
+		}
+	}
+}
