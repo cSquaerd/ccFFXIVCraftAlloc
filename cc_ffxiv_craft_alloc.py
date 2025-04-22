@@ -233,6 +233,7 @@ class RecipeCollection:
 			return True
 		
 		counts = [0 for r in self.recipes]
+		maxed_out = [False for r in self.recipes]
 
 		failure_streak = 0
 		rounds = 0
@@ -240,6 +241,12 @@ class RecipeCollection:
 		
 		while rounds < max_rounds and failure_streak < failures_until_stop:
 			i_recipe = random.randint(0, n_recipes)
+			if maxed_out[i_recipe]: # Early escape
+				failure_streak += 1
+				if debug_print:
+					print("Chose maxed out recipe {:s}".format(self.recipes[i_recipe].name))
+				continue
+
 			counts[i_recipe] += 1
 
 			summary = self.summarize(counts)
@@ -248,6 +255,13 @@ class RecipeCollection:
 				failure_streak += 1
 				if debug_print:
 					print("Failed on", self.recipes[i_recipe].name, "increase, fail streak", failure_streak)
+
+				maxed_out[i_recipe] = True
+				if all(maxed_out):
+					if debug_print:
+						print("All recipes maxed out, leaving early")
+						failure_streak = failures_until_stop
+						continue
 			else:
 				failure_streak = 0
 				if debug_print:
