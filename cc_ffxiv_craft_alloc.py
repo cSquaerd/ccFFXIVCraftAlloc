@@ -300,6 +300,31 @@ def main():
 	)
 
 	parser.add_argument("manifest", help = "Path to JSON detailing recipes and budget")
+	parser.add_argument(
+		"-r", "--max_rounds", action = "store", default = 1_000, metavar = "R (int)", type = int,
+		help = "Adjust how many rounds each primary Monte Carlo is allotted\n  (R >= 100, ideally)"
+	)
+	parser.add_argument(
+		"-f", "--max_failures", action = "store", default = 50, metavar = "F (int)", type = int,
+		help = "Adjust how many failures in a row each primary Monte Carlo is allotted\n  (F >= 10, ideally)"
+	)
+	parser.add_argument(
+		"-a", "--approximations", action = "store", default = 100, metavar = "A (int)", type = int,
+		help = "Adjust how many rounds the secondary Monte Carlo is allotted\n  (A >= 1)"
+	)
+	parser.add_argument(
+		"-d", "--debug_print", action = "store_true", help = "Print extra info for the secondary Monte Carlo"
+	)
+	parser.add_argument(
+		"-D", "--more_debug_print", action = "store_true", help = "Print extra info for all Monte Carlo levels"
+	)
+	parser.add_argument(
+		"-t", "--threshold", action = "store", default = 0, metavar = "T (int)", type = int,
+		help = (
+			"Set a minimum production threshold that the secondary Monte Carlo\n"
+			"must reach or surpass; can loop forever if too high"
+		)
+	)
 
 	argv = parser.parse_args()
 
@@ -337,9 +362,19 @@ def main():
 
 	R = RecipeCollection(recipes)
 
-	production_count, best_vectors = R.meta_approximate(
-		budget_ingredients, budget_crystals, debug_print = True, debug_print_inner = False
-	)
+	production_count = 0
+	while production_count < argv.threshold:
+		production_count, best_vectors = R.meta_approximate(
+			budget_ingredients, budget_crystals, argv.max_rounds, argv.max_failures, argv.approximations,
+			argv.debug_print or argv.more_debug_print, argv.more_debug_print
+		)
+
+		if production_count < argv.threshold:
+			print(
+				"Production count is shy, redo-ing Secondary Monte Carlo... ({:d} < {:d})".format(
+					production_count, argv.threshold
+				)
+			)
 
 	print(
 		"\n{:d} collectables can be produced with the following allocation:\n\t{:s}".format(
