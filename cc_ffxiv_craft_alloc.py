@@ -333,7 +333,7 @@ def main():
 		"-D", "--more_debug_print", action = "store_true", help = "Print extra info for all Monte Carlo levels"
 	)
 	parser.add_argument(
-		"-t", "--threshold", action = "store", default = 0, metavar = "T (int)", type = int,
+		"-t", "--threshold", action = "store", default = 1, metavar = "T (int)", type = int,
 		help = (
 			"Set a minimum production threshold that the secondary Monte Carlo\n"
 			"must reach or surpass; can loop forever if too high"
